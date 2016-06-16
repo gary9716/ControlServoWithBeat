@@ -1,7 +1,7 @@
 import processing.serial.*;
 import cc.arduino.*;
 
-Arduino arduino;
+Arduino arduino = null;
 Servo upperServo;
 Servo lowerServo;
 Minim minim;
@@ -17,10 +17,14 @@ void setup() {
   // Prints out the available serial ports.
   println(Arduino.list());
   
-  //on Mac
-  arduino = new Arduino(this, "/dev/tty.usbmodem1411", 57600);
+  String osName = System.getProperty("os.name");
+  if(osName.contains("Mac OS X")) {
+    arduino = new Arduino(this, "/dev/tty.usbmodem1411", 57600);
+  }
+  else if(osName.contains("Linux")) {
+    arduino = new Arduino(this, "/dev/ttyACM0", 57600);
+  }
   
-  //on Linux 
   
   if(arduino == null) {
     exit();
