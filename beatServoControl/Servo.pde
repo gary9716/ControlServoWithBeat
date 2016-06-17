@@ -1,13 +1,18 @@
 import processing.serial.*;
 import cc.arduino.*;
+import AULib.*;
 
 public class Servo {
+
+  public final int MaxAngle = 180;
+  public final int MinAngle = 0;
+
   int servoPin;
   Arduino arduino;
-  int targetAngle;
-
-  final int MaxAngle = 180;
-  final int MinAngle = 0;
+  int currentAngle = MinAngle;
+  int targetAngle = MinAngle;
+  int startAngle = 0;
+  int numFramesToTarget = 0;
 
   public Servo(Arduino arduino, int servoPin) {
     this.arduino = arduino;
@@ -16,17 +21,51 @@ public class Servo {
   } 
 
   public void turnTo(int angle) {
-    arduino.servoWrite(servoPin, constrain(angle, MinAngle, MaxAngle));
-    targetAngle = angle;
+    int resultAngle = constrain(angle, MinAngle, MaxAngle);
+    arduino.servoWrite(servoPin, resultAngle);
+    currentAngle = resultAngle;
   }
 
   public void turnToOneEnd() { //it would turn to the angle that is further to target angle.
-    if(targetAngle - MinAngle > MaxAngle - targetAngle) {
+    if(currentAngle - MinAngle > MaxAngle - currentAngle) {
       turnTo(MinAngle);
     }
     else {
       turnTo(MaxAngle);
     }
+  }
+
+  public void setTheTargetToOneEnd(int numFrames) {
+    if(currentAngle - MinAngle > MaxAngle - currentAngle) {
+      setTheTarget(MinAngle, numFrames);
+    }
+    else {
+      setTheTarget(MaxAngle, numFrames);
+    }
+  }
+
+  public void setTheTarget(int angle, int numFrames) {
+    numFramesToTarget = numFrames;
+    targetAngle = angle;
+    startAngle = currentAngle;
+  }
+
+  public int getNextAngle(float currentFrame) {
+    if(numFramesToTarget == 0) {
+      return currentAngle;
+    }
+    else if(currentFrame >= numFramesToTarget) {
+      return targetAngle;
+    }
+
+    float t_param = currentFrame / numFramesToTarget;
+    return (int)(startAngle + (targetAngle - startAngle) * AULib.ease(AULib.EASE_LINEAR, t_param));
+  }
+
+  public void turnToNextAngle(float currentFrame) {
+    int angle = getNextAngle(currentFrame);
+    //println("next:" +angle);
+    turnTo(angle);
   }
 
 }

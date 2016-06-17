@@ -166,7 +166,7 @@ class WalshBeatDetect extends BeatDetect{
     for (int j = 0; j < beatAverageSamples; j +=1) totalBeat += beatAverage[j];
     totalBeat = totalBeat/beatAverageSamples;
 
-    println("# of beats : " + totalBeat);
+    //println("# of beats : " + totalBeat);
 
     /////////////////////////////////////////////////find global beat///////////////////////////////////////////////////////////////////////////////////////////////
     c[0] = 3.25 + map(constrain(beatCounter, 0, 5), 0, 5, 5, 0);
@@ -198,8 +198,6 @@ class WalshBeatDetect extends BeatDetect{
     
     cyclePerBeatIntensity = max(beatSpread);
     
-    rect(cyclesPerBeat*10, 300, (cyclesPerBeat*10)+5, 400);
-
     standardDeviation = 0;
     for (int i = 0; i < maxTime; i++) standardDeviation += pow(beatCounterArraySamples/maxTime-beatSpread[i], 2);
     standardDeviation = pow(standardDeviation/maxTime, .5);
