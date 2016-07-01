@@ -1,0 +1,2 @@
+#!/bin/bash
+PYTHONPATH="/usr/local/lib/python2.7/site-packages" exec "/usr/local/Cellar/aubio/0.4.2/libexec/bin/aubioonset" "$@"
