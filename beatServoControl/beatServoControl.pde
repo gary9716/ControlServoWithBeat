@@ -37,7 +37,7 @@ void setup() {
     exit();
   }
   
-  upperServo = new Servo(arduino, 5);
+  upperServo = new Servo(arduino, 6);
   led = new Led(arduino, ledPin);
   
   minim = new Minim(this);
