@@ -2,21 +2,24 @@ import processing.serial.*;
 import cc.arduino.*;
 
 final int ledPin = 11;
+final int upperServoPin = 6;
 Led led;
 int ledBreathCycle = 1;
 
 Arduino arduino = null;
 Servo upperServo;
 Minim minim;
-AudioPlayer song;
+AudioPlayer song = null;
 BeatDetect beat;
 BeatListener bl;
 float kickSize, snareSize, hatSize;
 boolean makeATurn = false;
 int currentFrame = 0;
-float servoTimeInSec = 1f;
+float servoTimeInSec = 0.75f;
 int servoTimeInFrame;
-String[] songNames = new String[]{"marcus_kellis_theme.mp3"};
+String[] songNames = new String[]{"LifeisStrange-Crosses.mp3","OOR_jibunrock.mp3"};
+int[] sensitivity = new int[]{300,300};
+int detectingWay = 0;
 
 void setup() {
   size(360, 200);
@@ -27,7 +30,17 @@ void setup() {
   
   String osName = System.getProperty("os.name");
   if(osName.contains("Mac OS X")) {
-    arduino = new Arduino(this, "/dev/tty.usbmodem1411", 57600);
+    try {
+      arduino = new Arduino(this, "/dev/tty.usbmodem1411", 57600);
+    }
+    catch(Exception e) {
+      try {
+        arduino = new Arduino(this, "/dev/tty.usbmodem1421", 57600);
+      }
+      catch(Exception e2) {
+        arduino = null;
+      }
+    }
   }
   else if(osName.contains("Linux")) {
     arduino = new Arduino(this, "/dev/ttyACM0", 57600);
@@ -37,11 +50,19 @@ void setup() {
     exit();
   }
   
-  upperServo = new Servo(arduino, 5);
+  upperServo = new Servo(arduino, upperServoPin);
   led = new Led(arduino, ledPin);
   
   minim = new Minim(this);
-  
+}
+
+boolean beatDetected() {
+  if(detectingWay == 0) {
+    return beat.isHat();
+  }
+  else {
+    return beat.isKick();
+  }
 }
 
 void draw() {
@@ -51,9 +72,14 @@ void draw() {
   led.setBreathingLightMode((int)secToFrame(ledBreathCycle));
   
   if(song != null && song.isPlaying()) {
+    if(beatDetected()) {
+      upperServo.setTheTargetToOneEnd(servoTimeInFrame);
+    }
+    
     if(currentFrame < servoTimeInFrame) {
       currentFrame++; 
     }
+    
     upperServo.turnToNextAngle(currentFrame);
   }
   led.turnToNextLight();
@@ -67,24 +93,32 @@ public void keyPressed() {
       }
       song.play();
     }
+    else {
+      println("please load a song before pressing play");
+    }
   } 
   else if(key == 's') { //stop
     if(song != null) {
       song.pause();
     }
+    else {
+      println("there is no song to be stopped");
+    }
   }
   else if(key - '0' >= 0 && '9' - key >= 0) {
     try {
+      int index;
       if(key == '0') {
+        index = 9;
         if(songNames.length >= 10) {
-          song = minim.loadFile(songNames[9], 1024); 
+          song = minim.loadFile(songNames[index], 1024); 
         }
         else {
           song = null;
         }
       }
       else {
-        int index = key - '0' - 1;
+        index = key - '0' - 1;
         if(index < songNames.length) {
           song = minim.loadFile(songNames[index], 1024); 
         }
@@ -93,9 +127,17 @@ public void keyPressed() {
         }
       }
       
+      if(index == 0) {
+        detectingWay = 1;
+      }
+      else {
+        detectingWay = 0;
+      }
+      
+      
       if(song != null) {
-        beat = new WalshBeatDetect(song.bufferSize(), song.sampleRate(), new BeatDetectedCallback());
-        beat.setSensitivity(300);
+        beat = new BeatDetect(song.bufferSize(), song.sampleRate());
+        beat.setSensitivity(sensitivity[index]);
         bl = new BeatListener(beat, song);
       }
     }
@@ -108,8 +150,12 @@ public void keyPressed() {
   else if(key == 't') {
     upperServo.turnToOneEnd();
   }
+  else if(key == 'm') {
+    upperServo.turnTo(Servo.MiddleAngle);
+  }
   else if(keyCode == ESC) { //you can do some clean up here
     led.turnOff();
+    upperServo.turnTo(Servo.MiddleAngle);
   }
 }
 
@@ -131,15 +177,6 @@ public enum BeatType {
   Hat
 };
   
-//private void prepareExitHandler () {
-//  Runtime.getRuntime().addShutdownHook(new Thread(new Runnable() {
-//    public void run () {
-//      println("SHUTDOWN HOOK");
-//      // application exit code here
-//    }
-//  }));
-//}
-
 public float frameToSec(float numFrame) {
   return (numFrame / frameRate);
 }

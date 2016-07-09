@@ -14,7 +14,9 @@ BeatDetectUsingAubio beatDetect;
 float kickSize, snareSize, hatSize;
 boolean makeATurn = false;
 int currentFrame = 0;
-float servoTimeInSec = 0.5f;
+float servoTimeInSec = 1.5f;
+int beatCycle = 4;
+int beatCount = 0;
 int servoTimeInFrame;
 String[] songNames = new String[]{"LifeisStrange-Crosses.mp3","OOR_jibunrock.mp3"};
 int[] sensitivity = new int[]{300,300};
@@ -22,7 +24,8 @@ int detectingWay = 0;
 
 float nextTimestamp = -1;
 float withinTime = 0.05f;
-float lastDetectedTime;
+float currentLEDCycle;
+
 boolean beatDetected(AudioPlayer song) {
   float currentSongPos = song.position()/1000.0f;
   
@@ -30,8 +33,6 @@ boolean beatDetected(AudioPlayer song) {
     float temp = nextTimestamp;
     nextTimestamp = beatDetect.getNextTimeStamp();
     if(abs(currentSongPos - temp) < withinTime) {
-      
-      lastDetectedTime = currentSongPos;
       return true;
     }
     else {
@@ -41,8 +42,6 @@ boolean beatDetected(AudioPlayer song) {
   else {
     if(abs(currentSongPos - nextTimestamp) < withinTime) {
       nextTimestamp = beatDetect.getNextTimeStamp();
-      
-      lastDetectedTime = currentSongPos;
       return true;
     }
     else {
@@ -90,11 +89,15 @@ void draw() {
   background(0);
   
   servoTimeInFrame = (int)secToFrame(servoTimeInSec);
-  led.setBreathingLightMode((int)secToFrame(ledBreathCycle));
+  led.setBreathingLightMode((int)secToFrame(currentLEDCycle));
   
   if(song != null && song.isPlaying()) {
     if(beatDetected(song)) {
-      upperServo.setTheTargetToOneEnd(servoTimeInFrame);
+      if(beatCount % beatCycle == 0) {
+        upperServo.setTheTargetToOneEnd(servoTimeInFrame);
+        beatCount = 0;
+      }
+      beatCount++;
     }
     
     if(currentFrame < servoTimeInFrame) {
@@ -102,8 +105,12 @@ void draw() {
     }
     
     upperServo.turnToNextAngle(currentFrame);
+    led.turnToNextLight();
   }
-  led.turnToNextLight();
+  else {
+    led.turnOff();
+  }
+  
 }
 
 public void keyPressed() {
@@ -157,6 +164,13 @@ public void keyPressed() {
       println(e.toString());
     }
     
+    if(song != null) {
+      song.play();
+      currentLEDCycle = (beatDetect.numBeatsAnalyzed() / (song.length()/60000.0f)) / 100.0f;
+      //println(currentLEDCycle);
+    }
+    
+    beatCount = 0;
     nextTimestamp = -1;
   }
   else if(key == 't') {

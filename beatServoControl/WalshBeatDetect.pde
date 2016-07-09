@@ -178,8 +178,6 @@ class WalshBeatDetect extends BeatDetect{
     //println(threshold);
     
     if (beat > threshold & beatCounter > 5) {
-      // println(beatCounter);
-      // backgroundChange(100);
       cb.detected(BeatType.Any);
       beatCounter = 0;
     }

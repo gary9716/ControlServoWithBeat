@@ -3,10 +3,11 @@ import cc.arduino.*;
 import AULib.*;
 
 public class Servo {
-
-  public final int MaxAngle = 180;
-  public final int MinAngle = 0;
-
+  
+  public static final int MaxAngle = 120;
+  public static final int MinAngle = 60;
+  public static final int MiddleAngle = (MaxAngle + MinAngle)/2;
+  
   int servoPin;
   Arduino arduino;
   int currentAngle = MinAngle;
@@ -18,6 +19,9 @@ public class Servo {
     this.arduino = arduino;
     this.servoPin = servoPin;
     arduino.pinMode(this.servoPin, Arduino.SERVO);
+    
+    //set angle to init angle
+    turnTo(MiddleAngle);
   } 
 
   public void turnTo(int angle) {

@@ -4,8 +4,8 @@ import AULib.*;
 
 public class Servo {
   
-  public static final int MaxAngle = 120;
-  public static final int MinAngle = 60;
+  public static final int MaxAngle = 95;
+  public static final int MinAngle = 85;
   public static final int MiddleAngle = (MaxAngle + MinAngle)/2;
   
   int servoPin;

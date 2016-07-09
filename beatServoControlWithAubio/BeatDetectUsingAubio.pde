@@ -21,30 +21,30 @@ class BeatDetectUsingAubio {
       AubioPath += "aubioonset_linux";
     }
     
-    println(fileAbsPath);
-    new Thread(new Runnable() {
-      @Override
-      public void run() {
-         try {
-           Process p = runtimeEnv.exec(AubioPath + " -t 0.7 " + fileAbsPath);
-           
-           BufferedReader reader = 
-             new BufferedReader(new InputStreamReader(p.getInputStream()));
-           String line;
-           while ((line = reader.readLine())!= null) {
-             timeStamps.add(new Float(line));
-           }
-           p.waitFor();
-           isFinishProcessing = true;
-         }
-         catch(Exception e) {
-           println(e.toString());
-         }
+    //new Thread(new Runnable() {
+    //  @Override
+    //  public void run() {
          
-      }
+         
+    //  }
     
-    }).start();
+    //}).start();
     
+    try {
+       Process p = runtimeEnv.exec(AubioPath + " -t 0.7 " + fileAbsPath);
+       
+       BufferedReader reader = 
+         new BufferedReader(new InputStreamReader(p.getInputStream()));
+       String line;
+       while ((line = reader.readLine())!= null) {
+         timeStamps.add(new Float(line));
+       }
+       p.waitFor();
+       isFinishProcessing = true;
+     }
+     catch(Exception e) {
+       println(e.toString());
+     }
     
   }
   
@@ -53,12 +53,14 @@ class BeatDetectUsingAubio {
   }
   
   public float getNextTimeStamp() {
+    currentIndex++;
     if(timeStamps.size() > 0 && currentIndex < timeStamps.size()) {
-      currentIndex++;
       return timeStamps.get(currentIndex);
     }
-    else 
+    else {
+      currentIndex = -1;
       return -1;
+    }
   }
   
 }
