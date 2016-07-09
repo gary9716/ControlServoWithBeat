@@ -50,11 +50,7 @@ void setup() {
     exit();
   }
   
-<<<<<<< HEAD
   upperServo = new Servo(arduino, upperServoPin);
-=======
-  upperServo = new Servo(arduino, 6);
->>>>>>> ba2b8bd5c7b578f05d342a7d8df49d0a52bd368d
   led = new Led(arduino, ledPin);
   
   minim = new Minim(this);
